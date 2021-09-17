@@ -13,7 +13,14 @@
         = form.hidden_field :element_type, value: 'paragraph'
         = form.submit 'Paragraph', class: 'btn btn-primary'
     
-    - @post.elements.each do |element|
-        = form_with(model: [@post, element]) do |form|
-          = form.text_area :content
-          = form.submit 'Save', class: 'btn btn-primary'
+    .card 
+      .card-body.pt-5
+        - @post.elements.each do |element|
+          - if element.persisted?
+            .mb-3 
+              .paragraph-content 
+                == element.content
+              .paragraph-form
+                = form_with(model: [@post, element]) do |form|
+                  = form.rich_text_area :content
+                  = form.submit 'Save', class: 'btn btn-primary mt-3'
