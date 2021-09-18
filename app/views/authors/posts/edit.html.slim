@@ -3,24 +3,63 @@
   .col-md-3 
     = link_to 'Back', posts_path, class: 'btn btn-secondary mb-3'
     .card 
+      .card-header 
+        h6.card-title.mb-0 Editing Post
       .card-body 
-        h4.card-title Editing Post
         = render 'form'
+      .card-footer 
+        - if @post.published?
+          a href="#" class='btn btn-secondary btn-block' data-reflex='click->PublisherReflex#unpublish' data-post-id='#{@post.id}' Unpublish
+        - else 
+          a href="#" class='btn btn-dark btn-block' data-reflex='click->PublisherReflex#publish' data-post-id='#{@post.id}' Publish
 
   .col-md-9
     .mb-3
-      = form_with(model: [@post, @paragraph]) do |form|
+      = form_with(model: [@post, @element], html: { class: 'float-left mr-1'}) do |form|
         = form.hidden_field :element_type, value: 'paragraph'
-        = form.submit 'Paragraph', class: 'btn btn-primary'
-    
-    .card 
+        = button_tag(type: 'submit', class: 'btn btn-secondary') do 
+          i.fas.fa-paragraph
+      = form_with(model: [@post, @element]) do |form|
+        = form.hidden_field :element_type, value: 'image'
+        = button_tag(type: 'submit', class: 'btn btn-secondary') do
+          i.fas.fa-image
+    .card.mb-5
+      .card-header.text-right 
+        - if @post.published?
+          b Published
+          =< time_ago_in_words(@post.published_at)
+          |  ago 
+        - else 
+          | Unpublished
       .card-body.pt-5
-        - @post.elements.each do |element|
-          - if element.persisted?
-            .mb-3 
-              .paragraph-content 
-                == element.content
-              .paragraph-form
-                = form_with(model: [@post, element]) do |form|
-                  = form.rich_text_area :content
-                  = form.submit 'Save', class: 'btn btn-primary mt-3'
+        ul#element
+          - @post.elements.each do |element|
+            - if element.persisted?
+              li
+                - if element.paragraph?
+                  .mb-4.p-3.paragraph
+                    .paragraph-content 
+                      - if element.content.present?
+                        == element.content
+                      - else
+                        | Click to add content!
+                    .paragraph-form.d-none
+                      = form_with(model: [@post, element]) do |form|
+                        = form.rich_text_area :content
+                        .mt-3.d-flex.justify-content-between
+                          div
+                            => form.submit 'Save', class: 'btn btn-primary'
+                            a href="#" class='cancle btn btn-secondary' Cancle
+                          = link_to 'Delete', post_element_path(@post, element), method: :delete, class: 'btn btn-danger', data: { confirm: 'Are you sure?' }
+                - elsif element.image?
+                  .image.mb-5.p-3
+                    - if element.image.present?
+                      = image_tag(element.image)
+                      = link_to post_element_path(@post, element), method: :delete, class: 'delete-btn btn btn-dark float-right', data: { confirm: 'Are you sure?' } do 
+                        i.fas.fa-times
+                    - else
+                      = form_with(model: [@post, element]) do |form|
+                            = form.file_field :image
+                            .mt-3 
+                              => form.submit 'Save', class: 'btn btn-primary'
+                              a href="#" class='cancle btn btn-secondary' Cancle
